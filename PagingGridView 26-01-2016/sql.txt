@@ -1,0 +1,25 @@
+Select * from ot;
+
+Declare @RowCount int
+Execute spGetOt_by_PageIndex_and_PageSize 5, 5, @RowCount out
+Select @RowCount
+
+alter proc spGetOt_by_PageIndex_and_PageSize
+@PageIndex int,
+@PageSize int,
+@TotalRows int output
+as 
+Begin
+	Declare @StartRowIndex int
+	Declare @EndRowIndex int
+	
+	Set @StartRowIndex = (@PageIndex * @PageSize) + 1;
+	Set @EndRowIndex = (@PageIndex + 1) * @PageSize;
+	
+	Select ordre, date_saisie, designation_ot from
+	(Select ROW_NUMBER() over (order by ordre) as RowNumber, ordre, date_saisie, designation_ot
+	from ot) ot
+	where RowNumber >= @StartRowIndex and RowNumber <= @EndRowIndex
+	
+	Select @TotalRows = COUNT(*) from ot
+End
